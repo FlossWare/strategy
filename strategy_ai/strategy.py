@@ -11,6 +11,7 @@ ThompsonSamplingSelector -- in-memory Thompson Sampling bandit selector
 
 from __future__ import annotations
 
+import asyncio
 import random
 
 from strategy_ai.types import BanditArm, StrategyStats
@@ -30,6 +31,7 @@ class ThompsonSamplingSelector:
     def __init__(self, *, seed: int | None = None) -> None:
         self._rng = random.Random(seed)  # noqa: S311
         self._arms: dict[tuple[str, str], BanditArm] = {}
+        self._lock = asyncio.Lock()
 
     def _get_arm(self, strategy: str, task_type: str) -> BanditArm:
         """Return the arm for *(strategy, task_type)*, creating if needed."""
@@ -47,15 +49,16 @@ class ThompsonSamplingSelector:
         if not candidates:
             raise ValueError("candidates must not be empty")
 
-        best_strategy = candidates[0]
-        best_sample = -1.0
+        async with self._lock:
+            best_strategy = candidates[0]
+            best_sample = -1.0
 
-        for strategy in candidates:
-            arm = self._get_arm(strategy, task_type)
-            sample = self._rng.betavariate(arm.alpha, arm.beta)
-            if sample > best_sample:
-                best_sample = sample
-                best_strategy = strategy
+            for strategy in candidates:
+                arm = self._get_arm(strategy, task_type)
+                sample = self._rng.betavariate(arm.alpha, arm.beta)
+                if sample > best_sample:
+                    best_sample = sample
+                    best_strategy = strategy
 
         return best_strategy
 
@@ -66,15 +69,16 @@ class ThompsonSamplingSelector:
         0.5 increment beta (failure).  Running totals for trials,
         successes, and average reward are also maintained.
         """
-        arm = self._get_arm(strategy, task_type)
-        arm.total_trials += 1
-        arm.total_reward += reward
+        async with self._lock:
+            arm = self._get_arm(strategy, task_type)
+            arm.total_trials += 1
+            arm.total_reward += reward
 
-        if reward > 0.5:
-            arm.alpha += 1.0
-            arm.successes += 1
-        else:
-            arm.beta += 1.0
+            if reward > 0.5:
+                arm.alpha += 1.0
+                arm.successes += 1
+            else:
+                arm.beta += 1.0
 
     async def performance(
         self, *, task_type: str | None = None
@@ -84,28 +88,30 @@ class ThompsonSamplingSelector:
         When *task_type* is provided, only arms matching that task type are
         included.  The returned dict is keyed by ``"strategy:task_type"``.
         """
-        result: dict[str, StrategyStats] = {}
+        async with self._lock:
+            result: dict[str, StrategyStats] = {}
 
-        for (strategy, tt), arm in self._arms.items():
-            if task_type is not None and tt != task_type:
-                continue
+            for (strategy, tt), arm in self._arms.items():
+                if task_type is not None and tt != task_type:
+                    continue
 
-            avg_reward = (
-                arm.total_reward / arm.total_trials if arm.total_trials > 0 else 0.0
-            )
-            key = f"{strategy}:{tt}"
-            result[key] = StrategyStats(
-                strategy=strategy,
-                task_type=tt,
-                total_trials=arm.total_trials,
-                successes=arm.successes,
-                avg_reward=avg_reward,
-                alpha=arm.alpha,
-                beta=arm.beta,
-            )
+                avg_reward = (
+                    arm.total_reward / arm.total_trials if arm.total_trials > 0 else 0.0
+                )
+                key = f"{strategy}:{tt}"
+                result[key] = StrategyStats(
+                    strategy=strategy,
+                    task_type=tt,
+                    total_trials=arm.total_trials,
+                    successes=arm.successes,
+                    avg_reward=avg_reward,
+                    alpha=arm.alpha,
+                    beta=arm.beta,
+                )
 
-        return result
+            return result
 
-    def reset(self) -> None:
+    async def reset(self) -> None:
         """Clear all bandit state."""
-        self._arms.clear()
+        async with self._lock:
+            self._arms.clear()

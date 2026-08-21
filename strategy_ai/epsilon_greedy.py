@@ -12,6 +12,7 @@ EpsilonGreedySelector -- in-memory epsilon-greedy bandit selector
 
 from __future__ import annotations
 
+import asyncio
 import random
 
 from strategy_ai.types import BanditArm, StrategyStats
@@ -40,6 +41,7 @@ class EpsilonGreedySelector:
         self._epsilon = epsilon
         self._rng = random.Random(seed)  # noqa: S311
         self._arms: dict[tuple[str, str], BanditArm] = {}
+        self._lock = asyncio.Lock()
 
     @property
     def epsilon(self) -> float:
@@ -70,58 +72,62 @@ class EpsilonGreedySelector:
         if not candidates:
             raise ValueError("candidates must not be empty")
 
-        if self._rng.random() < self._epsilon:
-            return self._rng.choice(candidates)
+        async with self._lock:
+            if self._rng.random() < self._epsilon:
+                return self._rng.choice(candidates)
 
-        best_strategy = candidates[0]
-        best_reward = self._avg_reward(candidates[0], task_type)
+            best_strategy = candidates[0]
+            best_reward = self._avg_reward(candidates[0], task_type)
 
-        for strategy in candidates[1:]:
-            avg = self._avg_reward(strategy, task_type)
-            if avg > best_reward:
-                best_reward = avg
-                best_strategy = strategy
+            for strategy in candidates[1:]:
+                avg = self._avg_reward(strategy, task_type)
+                if avg > best_reward:
+                    best_reward = avg
+                    best_strategy = strategy
 
         return best_strategy
 
     async def update(self, strategy: str, task_type: str, *, reward: float) -> None:
         """Record a reward observation for a strategy/task-type pair."""
-        arm = self._get_arm(strategy, task_type)
-        arm.total_trials += 1
-        arm.total_reward += reward
+        async with self._lock:
+            arm = self._get_arm(strategy, task_type)
+            arm.total_trials += 1
+            arm.total_reward += reward
 
-        if reward > 0.5:
-            arm.alpha += 1.0
-            arm.successes += 1
-        else:
-            arm.beta += 1.0
+            if reward > 0.5:
+                arm.alpha += 1.0
+                arm.successes += 1
+            else:
+                arm.beta += 1.0
 
     async def performance(
         self, *, task_type: str | None = None
     ) -> dict[str, StrategyStats]:
         """Return performance statistics for all known arms."""
-        result: dict[str, StrategyStats] = {}
+        async with self._lock:
+            result: dict[str, StrategyStats] = {}
 
-        for (strategy, tt), arm in self._arms.items():
-            if task_type is not None and tt != task_type:
-                continue
+            for (strategy, tt), arm in self._arms.items():
+                if task_type is not None and tt != task_type:
+                    continue
 
-            avg_reward = (
-                arm.total_reward / arm.total_trials if arm.total_trials > 0 else 0.0
-            )
-            key = f"{strategy}:{tt}"
-            result[key] = StrategyStats(
-                strategy=strategy,
-                task_type=tt,
-                total_trials=arm.total_trials,
-                successes=arm.successes,
-                avg_reward=avg_reward,
-                alpha=arm.alpha,
-                beta=arm.beta,
-            )
+                avg_reward = (
+                    arm.total_reward / arm.total_trials if arm.total_trials > 0 else 0.0
+                )
+                key = f"{strategy}:{tt}"
+                result[key] = StrategyStats(
+                    strategy=strategy,
+                    task_type=tt,
+                    total_trials=arm.total_trials,
+                    successes=arm.successes,
+                    avg_reward=avg_reward,
+                    alpha=arm.alpha,
+                    beta=arm.beta,
+                )
 
-        return result
+            return result
 
-    def reset(self) -> None:
+    async def reset(self) -> None:
         """Clear all bandit state."""
-        self._arms.clear()
+        async with self._lock:
+            self._arms.clear()

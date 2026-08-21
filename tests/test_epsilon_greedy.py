@@ -120,7 +120,7 @@ class TestEpsilonGreedySelector:
         selector = EpsilonGreedySelector()
         loop = asyncio.new_event_loop()
         loop.run_until_complete(selector.update("a", "code", reward=0.9))
-        selector.reset()
+        loop.run_until_complete(selector.reset())
         stats = loop.run_until_complete(selector.performance())
         loop.close()
         assert stats == {}

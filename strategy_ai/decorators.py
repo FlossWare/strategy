@@ -65,7 +65,10 @@ def with_thompson_sampling(
 
             try:
                 result = await fn(*args, **kwargs)
-                reward = getattr(result, "reward", 1.0)
+                if isinstance(result, dict):
+                    reward = float(result.get("reward", 1.0))
+                else:
+                    reward = float(getattr(result, "reward", 1.0))
                 await ts.update(selected, task_type, reward=reward)
                 return result
             except Exception:
@@ -119,7 +122,10 @@ def with_epsilon_greedy(
 
             try:
                 result = await fn(*args, **kwargs)
-                reward = getattr(result, "reward", 1.0)
+                if isinstance(result, dict):
+                    reward = float(result.get("reward", 1.0))
+                else:
+                    reward = float(getattr(result, "reward", 1.0))
                 await eg.update(selected, task_type, reward=reward)
                 return result
             except Exception:
