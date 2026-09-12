@@ -1,65 +1,40 @@
 # strategy-ai
 
-Thompson Sampling and epsilon-greedy bandit-based strategy selection for LLM model routing.
+**Reusable decision and optimization strategies for FlossWare.**
 
-Zero external dependencies. Stdlib only. Python 3.11+.
+This repository contains interchangeable strategy implementations. It is not a model router and does not define the Loom execution model.
 
-## Install
+## Boundary
 
-```bash
-pip install "git+https://github.com/FlossWare/strategy-ai.git"
+```text
+Stable contract in Loom/capability
+            │
+            ▼
+     strategy implementation
+            │
+            ▼
+ decision + provenance + outcome
 ```
 
-## Quick Start
+Strategies choose among feasible alternatives. They do not own authorization, policy, credentials, billing, quota enforcement, or safety constraints.
 
-```python
-import asyncio
-from strategy_ai import ThompsonSamplingSelector, EpsilonGreedySelector
+## Current strategies
 
-async def main():
-    # Thompson Sampling
-    ts = ThompsonSamplingSelector()
-    selected = await ts.select("code_gen", candidates=["gpt-4o", "claude-sonnet", "gemini"])
-    print(f"Selected: {selected}")
+- Thompson Sampling
+- epsilon-greedy
+- deterministic baselines
+- future UCB/contextual-bandit strategies
+- future optimization strategies where appropriate
 
-    # Record outcome
-    await ts.update(selected, "code_gen", reward=0.9)
+Thompson Sampling is useful for adaptive model/resource selection, but the implementation remains a reusable strategy rather than a special Loom primitive.
 
-    # Check stats
-    stats = await ts.performance()
-    for key, s in stats.items():
-        print(f"  {key}: trials={s.total_trials}, avg_reward={s.avg_reward:.2f}")
+## Learning boundary
 
-    # Epsilon-greedy alternative
-    eg = EpsilonGreedySelector(epsilon=0.1)
-    selected = await eg.select("code_gen", candidates=["gpt-4o", "claude-sonnet", "gemini"])
-    print(f"Epsilon-greedy selected: {selected}")
+Strategy state records decisions, rewards, and performance needed by the strategy itself. Durable engineering knowledge belongs in `knowledge`; authoritative task evaluation belongs in `evaluation`; model invocation belongs in `model-gateway`.
 
-asyncio.run(main())
-```
+## Migration
 
-## Decorators
-
-```python
-from strategy_ai import with_thompson_sampling, with_epsilon_greedy
-
-@with_thompson_sampling(task_type="code_gen", seed=42)
-async def generate_code(prompt: str, *, selected: str = ""):
-    # 'selected' is automatically set to the chosen candidate
-    return await call_model(selected, prompt)
-
-result = await generate_code("Write a function", candidates=["gpt-4o", "claude-sonnet"])
-```
-
-## Protocols
-
-```python
-from strategy_ai import StrategySelector, RewardTracker, PerformanceReporter
-
-# Both ThompsonSamplingSelector and EpsilonGreedySelector satisfy all three
-assert isinstance(ThompsonSamplingSelector(), StrategySelector)
-assert isinstance(EpsilonGreedySelector(), RewardTracker)
-```
+The former documentation framed this package specifically around LLM model routing. That is now too narrow. Routing is one consumer of these strategies, alongside Worker selection, resource selection, evaluation policies, and other optimization problems.
 
 ## License
 
