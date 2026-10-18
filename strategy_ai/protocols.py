@@ -35,8 +35,6 @@ class RewardTracker(Protocol):
 class PerformanceReporter(Protocol):
     """Report performance statistics for strategy arms."""
 
-    async def performance(
-        self, *, task_type: str | None = None
-    ) -> dict[str, StrategyStats]:
+    async def performance(self, *, task_type: str | None = None) -> dict[str, StrategyStats]:
         """Return performance statistics for all known arms."""
         ...
