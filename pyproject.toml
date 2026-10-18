@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "strategy-ai"
-version = "0.1"
+version = "0.2"
 description = "Reusable decision strategies, including Thompson Sampling and epsilon-greedy selection."
 readme = "README.md"
 requires-python = ">=3.11"

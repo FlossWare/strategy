@@ -36,4 +36,4 @@ __all__ = [
     "with_thompson_sampling",
 ]
 
-__version__ = "0.1"
+__version__ = "0.2"
