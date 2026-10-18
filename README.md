@@ -1,41 +1,34 @@
-# strategy-ai
+# strategy
 
-**Reusable decision and optimization strategies for FlossWare.**
+**Reusable decision strategies for FlossWare.**
 
 This repository contains interchangeable strategy implementations. It is not a model router and does not define the Loom execution model.
 
 ## Boundary
 
 ```text
-Stable contract in Loom/capability
-            │
-            ▼
-     strategy implementation
-            │
-            ▼
- decision + provenance + outcome
+stable strategy contract
+          |
+          v
+       strategy
+          |
+          v
+decision + provenance + outcome
 ```
 
-Strategies choose among feasible alternatives. They do not own authorization, policy, credentials, billing, quota enforcement, or safety constraints.
+Strategies choose among feasible alternatives. They do not own authorization, policy, credentials, billing, quota enforcement, or safety constraints. Those constraints must be applied independently and cannot be overridden by a learned strategy.
 
 ## Current strategies
 
 - Thompson Sampling
 - epsilon-greedy
 - deterministic baselines
-- future UCB/contextual-bandit strategies
-- future optimization strategies where appropriate
+- future UCB and contextual-bandit strategies
 
-Thompson Sampling is useful for adaptive model/resource selection, but the implementation remains a reusable strategy rather than a special Loom primitive.
+Thompson Sampling can support adaptive model or resource selection, but it remains a reusable strategy rather than a special Loom primitive.
 
-## Learning boundary
+## Relationship to Loom
 
-Strategy state records decisions, rewards, and performance needed by the strategy itself. Durable engineering knowledge belongs in `knowledge`; authoritative task evaluation belongs in `evaluation`; model invocation belongs in `model-gateway`.
+Loom defines execution semantics and the contracts through which capabilities are invoked. This repository supplies strategy implementations that a Loom Worker, Arbiter, or other compatible caller may use. It does not own orchestration or provider invocation.
 
-## Migration
-
-The former documentation framed this package specifically around LLM model routing. That is now too narrow. Routing is one consumer of these strategies, alongside Worker selection, resource selection, evaluation policies, and other optimization problems.
-
-## License
-
-MIT
+Optimization algorithms may be implemented in `optimizer` and used by strategies when appropriate; strategy selection and optimization algorithms are related but distinct responsibilities.
