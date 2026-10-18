@@ -39,7 +39,7 @@ class EpsilonGreedySelector:
         if not 0.0 <= epsilon <= 1.0:
             raise ValueError(f"epsilon must be between 0.0 and 1.0, got {epsilon}")
         self._epsilon = epsilon
-        self._rng = random.Random(seed)  # noqa: S311
+        self._rng = random.Random(seed)  # noqa: S311  # nosec B311: bandit exploration is not cryptographic
         self._arms: dict[tuple[str, str], BanditArm] = {}
         self._lock = asyncio.Lock()
 
