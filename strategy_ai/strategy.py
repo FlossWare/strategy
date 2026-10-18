@@ -29,7 +29,7 @@ class ThompsonSamplingSelector:
     """
 
     def __init__(self, *, seed: int | None = None) -> None:
-        self._rng = random.Random(seed)  # noqa: S311
+        self._rng = random.Random(seed)  # noqa: S311  # nosec B311: bandit sampling is not cryptographic
         self._arms: dict[tuple[str, str], BanditArm] = {}
         self._lock = asyncio.Lock()
 
