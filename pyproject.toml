@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "strategy-ai"
 version = "0.1"
-description = "Thompson Sampling and epsilon-greedy bandit-based strategy selection for LLM model routing."
+description = "Reusable decision strategies, including Thompson Sampling and epsilon-greedy selection."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -29,9 +29,9 @@ classifiers = [
 dev = ["pytest", "pytest-asyncio", "ruff", "mypy", "bandit"]
 
 [project.urls]
-Homepage = "https://github.com/FlossWare/strategy-ai"
-Repository = "https://github.com/FlossWare/strategy-ai"
-Issues = "https://github.com/FlossWare/strategy-ai/issues"
+Homepage = "https://github.com/FlossWare/strategy"
+Repository = "https://github.com/FlossWare/strategy"
+Issues = "https://github.com/FlossWare/strategy/issues"
 
 [tool.setuptools.packages.find]
 include = ["strategy_ai*"]
