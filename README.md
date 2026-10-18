@@ -31,4 +31,4 @@ Thompson Sampling can support adaptive model or resource selection, but it remai
 
 Loom defines execution semantics and the contracts through which capabilities are invoked. This repository supplies strategy implementations that a Loom Worker, Arbiter, or other compatible caller may use. It does not own orchestration or provider invocation.
 
-Optimization algorithms may be implemented in `optimizer` and used by strategies when appropriate; strategy selection and optimization algorithms are related but distinct responsibilities.
+Optimization algorithms may be implemented in `optimization` and used by strategies where appropriate. Strategy selection and optimization algorithms are related but distinct responsibilities.
