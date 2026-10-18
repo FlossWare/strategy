@@ -100,9 +100,7 @@ class EpsilonGreedySelector:
             else:
                 arm.beta += 1.0
 
-    async def performance(
-        self, *, task_type: str | None = None
-    ) -> dict[str, StrategyStats]:
+    async def performance(self, *, task_type: str | None = None) -> dict[str, StrategyStats]:
         """Return performance statistics for all known arms."""
         async with self._lock:
             result: dict[str, StrategyStats] = {}
@@ -111,9 +109,7 @@ class EpsilonGreedySelector:
                 if task_type is not None and tt != task_type:
                     continue
 
-                avg_reward = (
-                    arm.total_reward / arm.total_trials if arm.total_trials > 0 else 0.0
-                )
+                avg_reward = arm.total_reward / arm.total_trials if arm.total_trials > 0 else 0.0
                 key = f"{strategy}:{tt}"
                 result[key] = StrategyStats(
                     strategy=strategy,
