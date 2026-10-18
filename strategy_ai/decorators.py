@@ -11,7 +11,8 @@ the selector (ADR-0001: Explicit Opt-In).
 from __future__ import annotations
 
 import functools
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from strategy_ai.epsilon_greedy import EpsilonGreedySelector
 from strategy_ai.strategy import ThompsonSamplingSelector
