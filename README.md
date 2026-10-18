@@ -32,3 +32,7 @@ Thompson Sampling can support adaptive model or resource selection, but it remai
 Loom defines execution semantics and the contracts through which capabilities are invoked. This repository supplies strategy implementations that a Loom Worker, Arbiter, or other compatible caller may use. It does not own orchestration or provider invocation.
 
 Optimization algorithms may be implemented in `optimization` and used by strategies where appropriate. Strategy selection and optimization algorithms are related but distinct responsibilities.
+
+## Packaging note
+
+The repository is named `strategy`. The current distribution/import identifiers remain `strategy-ai` and `strategy_ai`; repository naming does not automatically rename a published package or Python imports. Change those identifiers only through an explicit compatibility and release decision.
